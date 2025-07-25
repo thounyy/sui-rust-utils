@@ -1654,6 +1654,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cynic",
+ "serde",
  "sui-crypto",
  "sui-graphql-client",
  "sui-sdk-types",

@@ -16,13 +16,7 @@ pub async fn get(client: &Client, id: Address) -> Result<Object> {
 
 pub async fn get_as_input(client: &Client, id: Address) -> Result<Input> {
     let object = get(client, id).await?;
-    let mut input = Input::from(&object);
-
-    input = match object.owner() {
-        Owner::Address(_) => input.with_owned_kind(),
-        Owner::Object(_) => input.with_owned_kind(),
-        _ => input,
-    };
+    let input = Input::from(&object);
 
     Ok(input)
 }
