@@ -162,10 +162,7 @@ pub async fn get_owned_with_fields(
     Ok(move_values)
 }
 
-pub async fn get_dynamic_fields(
-    client: &Client,
-    id: Address,
-) -> Result<Vec<DynamicFieldOutput>> {
+pub async fn get_dynamic_fields(client: &Client, id: Address) -> Result<Vec<DynamicFieldOutput>> {
     let mut dfs = Vec::new();
     let mut cursor = None;
     let mut has_next_page = true;
