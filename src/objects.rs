@@ -7,15 +7,15 @@ use sui_graphql_client::{
 use sui_sdk_types::{framework::Coin, Address, Object, Owner};
 use sui_transaction_builder::unresolved::Input;
 
-pub async fn get(sui_client: &Client, id: Address) -> Result<Object> {
-    sui_client
+pub async fn get(client: &Client, id: Address) -> Result<Object> {
+    client
         .object(id, None)
         .await?
         .ok_or(anyhow!("Object not found {}", id))
 }
 
-pub async fn get_as_input(sui_client: &Client, id: Address) -> Result<Input> {
-    let object = get(sui_client, id).await?;
+pub async fn get_as_input(client: &Client, id: Address) -> Result<Input> {
+    let object = get(client, id).await?;
     let mut input = Input::from(&object);
 
     input = match object.owner() {
@@ -27,7 +27,7 @@ pub async fn get_as_input(sui_client: &Client, id: Address) -> Result<Input> {
     Ok(input)
 }
 
-pub async fn get_multi(sui_client: &Client, mut ids: Vec<Address>) -> Result<Vec<Object>> {
+pub async fn get_multi(client: &Client, mut ids: Vec<Address>) -> Result<Vec<Object>> {
     let mut objects = Vec::new();
     let mut cursor = None;
     let mut has_next_page = true;
@@ -44,7 +44,7 @@ pub async fn get_multi(sui_client: &Client, mut ids: Vec<Address>) -> Result<Vec
             object_ids = Some(ids.split_off(50));
         }
 
-        let resp = sui_client
+        let resp = client
             .objects(
                 Some(ObjectFilter {
                     object_ids,
@@ -63,7 +63,7 @@ pub async fn get_multi(sui_client: &Client, mut ids: Vec<Address>) -> Result<Vec
 }
 
 pub async fn get_owned(
-    sui_client: &Client,
+    client: &Client,
     owner: Address,
     type_: Option<&str>,
 ) -> Result<Vec<Object>> {
@@ -78,7 +78,7 @@ pub async fn get_owned(
             limit: Some(50),
         };
 
-        let resp = sui_client
+        let resp = client
             .objects(
                 Some(ObjectFilter {
                     owner: Some(owner),
@@ -98,7 +98,7 @@ pub async fn get_owned(
 }
 
 pub async fn get_owned_coins(
-    sui_client: &Client,
+    client: &Client,
     owner: Address,
     type_: Option<&str>,
 ) -> Result<Vec<Coin<'static>>> {
@@ -113,7 +113,7 @@ pub async fn get_owned_coins(
             limit: Some(50),
         };
 
-        let resp = sui_client.coins(owner, type_, filter).await?;
+        let resp = client.coins(owner, type_, filter).await?;
         coins.extend(resp.data().iter().cloned());
 
         cursor = resp.page_info().end_cursor.clone();
@@ -125,7 +125,7 @@ pub async fn get_owned_coins(
 
 // gets `MoveValue`s from sui-graphql-client (returning the fields in json)
 pub async fn get_owned_with_fields(
-    sui_client: &Client,
+    client: &Client,
     owner: Address,
     type_: Option<&str>,
 ) -> Result<Vec<MoveValue>> {
@@ -146,7 +146,7 @@ pub async fn get_owned_with_fields(
             last: None,
         });
 
-        let response = sui_client.run_query(&operation).await?;
+        let response = client.run_query(&operation).await?;
         if let Some(errors) = response.errors {
             return Err(anyhow!("GraphQL error: {:?}", errors));
         }
@@ -169,7 +169,7 @@ pub async fn get_owned_with_fields(
 }
 
 pub async fn get_dynamic_fields(
-    sui_client: &Client,
+    client: &Client,
     id: Address,
 ) -> Result<Vec<DynamicFieldOutput>> {
     let mut dfs = Vec::new();
@@ -182,7 +182,7 @@ pub async fn get_dynamic_fields(
             ..PaginationFilter::default()
         };
 
-        let resp = sui_client.dynamic_fields(id, filter).await?;
+        let resp = client.dynamic_fields(id, filter).await?;
         dfs.extend(resp.data().iter().cloned());
 
         cursor = resp.page_info().end_cursor.clone();
