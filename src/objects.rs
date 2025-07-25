@@ -4,7 +4,7 @@ use sui_graphql_client::{
     query_types::{MoveValue, ObjectFilter, ObjectsQuery, ObjectsQueryArgs},
     Client, Direction, DynamicFieldOutput, PaginationFilter,
 };
-use sui_sdk_types::{framework::Coin, Address, Object, Owner};
+use sui_sdk_types::{framework::Coin, Address, Object};
 use sui_transaction_builder::unresolved::Input;
 
 pub async fn get(client: &Client, id: Address) -> Result<Object> {
