@@ -1,11 +1,13 @@
-use anyhow::{anyhow, Ok, Result};
 use std::time::{Duration, Instant};
 use sui_crypto::{ed25519::Ed25519PrivateKey, SuiSigner};
 use sui_graphql_client::Client;
 use sui_sdk_types::{Address, ExecutionStatus, TransactionEffects};
 use sui_transaction_builder::{unresolved::Input, TransactionBuilder};
 
-use crate::objects;
+use crate::{
+    error::{Result, SuiUtilsError},
+    objects,
+};
 
 pub async fn new_with_gas(
     client: &Client,
@@ -20,18 +22,18 @@ pub async fn new_with_gas(
     let gas_coin = sui_coins
         .iter()
         .find(|c| c.balance() >= gas_budget)
-        .ok_or(anyhow!("No SUI coin with minimum budget found"))?;
+        .ok_or(SuiUtilsError::GasCoinNotFound)?;
     // build the gas input from the coin
     let gas_input: Input = (&client
         .object(gas_coin.id().to_owned().into(), None)
         .await?
-        .ok_or(anyhow!("Error while building gas input"))?)
+        .ok_or(SuiUtilsError::InvalidGasInput)?)
         .into();
     // get the reference gas price
     let gas_price = client
         .reference_gas_price(None)
         .await?
-        .ok_or(anyhow!("Could not get reference gas price"))?;
+        .ok_or(SuiUtilsError::ReferenceGasPriceError)?;
 
     builder.add_gas_objects(vec![gas_input.with_owned_kind()]);
     builder.set_gas_price(gas_price);
@@ -46,8 +48,12 @@ pub async fn execute_and_wait_for_effects(
     builder: TransactionBuilder,
     pk: &Ed25519PrivateKey,
 ) -> Result<TransactionEffects> {
-    let tx = builder.finish()?;
-    let sig = pk.sign_transaction(&tx)?;
+    let tx = builder
+        .finish()
+        .map_err(|e| SuiUtilsError::TransactionBuildingError(e.to_string()))?;
+    let sig = pk
+        .sign_transaction(&tx)
+        .map_err(|e| SuiUtilsError::TransactionSigningError(e.to_string()))?;
 
     let effects = client.execute_tx(vec![sig], &tx).await?;
     // wait for the transaction to be finalized
@@ -64,9 +70,12 @@ pub async fn execute_and_wait_for_effects(
             if status == &ExecutionStatus::Success {
                 Ok(effects)
             } else {
-                Err(anyhow!("Transaction failed: {:?}", status))
+                Err(SuiUtilsError::TransactionExecutionError(format!(
+                    "Transaction failed: {:?}",
+                    status
+                )))
             }
         }
-        None => Err(anyhow!("Could not get effects")),
+        None => Err(SuiUtilsError::InvalidTransactionEffects),
     }
 }

@@ -1,4 +1,3 @@
-use anyhow::{anyhow, Result};
 use cynic::QueryBuilder;
 use sui_graphql_client::{
     query_types::{MoveValue, ObjectFilter, ObjectsQuery, ObjectsQueryArgs},
@@ -7,11 +6,13 @@ use sui_graphql_client::{
 use sui_sdk_types::{framework::Coin, Address, Object};
 use sui_transaction_builder::unresolved::Input;
 
+use crate::error::{Result, SuiUtilsError};
+
 pub async fn get(client: &Client, id: Address) -> Result<Object> {
     client
         .object(id, None)
         .await?
-        .ok_or(anyhow!("Object not found {}", id))
+        .ok_or(SuiUtilsError::ObjectNotFound(id))
 }
 
 pub async fn get_as_input(client: &Client, id: Address) -> Result<Input> {
@@ -140,17 +141,17 @@ pub async fn get_owned_with_fields(
             last: None,
         });
 
-        let response = client.run_query(&operation).await?;
-        if let Some(errors) = response.errors {
-            return Err(anyhow!("GraphQL error: {:?}", errors));
-        }
+        let response = client.run_query(&operation)
+            .await
+            .map_err(|e| SuiUtilsError::GraphQL(e.to_string()))?;
 
         if let Some(objects) = response.data {
             for object in objects.objects.nodes {
+                let object_string = format!("{:?}", object);
                 let move_value = object
                     .as_move_object
                     .and_then(|move_object| move_object.contents)
-                    .ok_or(anyhow!("Could not get object type"))?;
+                    .ok_or(SuiUtilsError::ObjectContentsNotFound(object_string))?;
                 move_values.push(move_value);
             }
 

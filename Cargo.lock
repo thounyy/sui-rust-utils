@@ -1659,6 +1659,7 @@ dependencies = [
  "sui-graphql-client",
  "sui-sdk-types",
  "sui-transaction-builder",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
