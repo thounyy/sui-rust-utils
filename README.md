@@ -1,5 +1,7 @@
 # Sui Rust Utils
 
+![sui rust banner](./assets/rust_on_sui_banner.png)
+
 A Rust library providing helpful utilities and abstractions that complement the new official [Sui Rust SDK](https://github.com/mystenlabs/sui-rust-sdk). This library simplifies common operations when working with Sui objects and composing transactions with arguments.
 
 It uses the same version as in [move-binding](https://github.com/MystenLabs/move-binding) so you can use the three libraries together seamlessly.
