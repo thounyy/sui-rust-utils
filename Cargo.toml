@@ -1,0 +1,17 @@
+[package]
+name = "sui-utils"
+description = "A library providing helpers complementing the sui-rust-sdk"
+authors = ["Thouny <thounyy@tuta.io>"]
+license = "Apache-2.0"
+repository = "https://github.com/thounyy/sui-rust-utils"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+cynic = "3.11.0"
+# uses the same deps as in github.com/mystenlabs/move-binding for easier integration
+sui-graphql-client = { git = "https://github.com/mystenlabs/sui-rust-sdk", package = "sui-graphql-client", rev="f0c8068" }
+sui-sdk-types = { git = "https://github.com/mystenlabs/sui-rust-sdk", package = "sui-sdk-types", rev="f0c8068", features = ["serde"] }
+sui-transaction-builder = { git = "https://github.com/mystenlabs/sui-rust-sdk", package = "sui-transaction-builder", rev="f0c8068" }
+sui-crypto = { git = "https://github.com/mystenlabs/sui-rust-sdk", package = "sui-crypto", rev="f0c8068", features = ["ed25519"] }
